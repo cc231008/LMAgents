@@ -1,55 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Agent Chat</title>
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    <style>
-        .message {
-            margin-bottom: 10px;
+<meta charset="UTF-8">
+<title>Agent Chat</title>
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+<style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f3f4f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
         }
         #chat {
             max-height: 400px;
             overflow-y: auto;
             border: 1px solid #ccc;
             padding: 10px;
+            width: 100%;
+            max-width: 600px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-    </style>
+        .message {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .message img {
+            border-radius: 50%;
+            margin-right: 10px;
+            width: 50px;
+            height: 50px;
+        }
+        .message .content {
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            padding: 10px;
+            max-width: 80%;
+        }
+        #location_input {
+            padding: 10px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+</style>
 </head>
 <body>
-    <h1>Chat with Agents</h1>
-    <div id="chat"></div>
-    <input type="text" id="topic_input" placeholder="Enter a topic..." autocomplete="off"/>
-    <button onclick="startConversation()">Start Conversation</button>
+<h1>Chat with Agents</h1>
+<div id="chat"></div>
+<input type="text" id="location_input" placeholder="Enter a location..." autocomplete="off"/>
+<button onclick="startConversation()">Start Conversation</button>
+<script>
+    var socket = io.connect('http://127.0.0.1:5000');
+    var currentMessageContainer = null;
+    var currentMessageContent = null;
+    var currentRole = null;
 
-    <script>
-        var socket = io.connect('http://127.0.0.1:5000');
-        var currentMessageContainer = null;
-        var currentRole = null;
+    var avatars = {
+            "Naruto Uzumaki": "https://avatarfiles.alphacoders.com/231/thumb-1920-231318.jpg",
+            "Monkey D. Luffy": "https://th.bing.com/th/id/OIP.TgBd_of9t9pz-Zm8_fhL5gHaHa?rs=1&pid=ImgDetMain",
+            "Ichigo Kurosaki": "https://i.pinimg.com/originals/cf/de/6e/cfde6ed14190afb79c94f55b8c23a803.png",
+            "Goku": "https://th.bing.com/th/id/OIP.ttsb8erClNyuBQV1ZFBQUgHaHa?rs=1&pid=ImgDetMain",
+            "Eren Yeager": "https://i.pinimg.com/originals/03/81/a7/0381a7203140f25ed65ba27780df11e0.jpg",
+            "Deku": "https://avatarfiles.alphacoders.com/173/173395.png"
+        };
 
-        socket.on('new_message', function(msg) {
-            var chat = document.getElementById('chat');
+    socket.on('new_message', function(msg) {
+        var chat = document.getElementById('chat');
 
-            // Check if the role has changed or if there is no current message container
-            if (currentRole !== msg.role || !currentMessageContainer) {
-                // Create a new message container for each new message
-                currentMessageContainer = document.createElement('div');
-                currentMessageContainer.className = 'message';
-                chat.appendChild(currentMessageContainer);
-                currentRole = msg.role;
-            }
+        // Check if the role has changed or if there is no current message container
+        if (currentRole !== msg.role || !currentMessageContainer) {
+            // Create a new message container for each new message
+            currentMessageContainer = document.createElement('div');
+            currentMessageContainer.className = 'message';
 
-            // Update the current message container with the new content
-            currentMessageContainer.textContent = `${msg.role}: ${msg.content}`;
-            chat.scrollTop = chat.scrollHeight;  // Scroll to the bottom
-        });
+        
+            var avatar = document.createElement('img');
+            avatar.src = avatars[msg.role];
+ 
+            currentMessageContent = document.createElement('div');
+            currentMessageContent.className = 'content';
+ 
+            currentMessageContainer.appendChild(avatar);
+            currentMessageContainer.appendChild(currentMessageContent);
 
-        function startConversation() {
-            var input = document.getElementById('topic_input');
-            var topic = input.value;
-            socket.emit('start_conversation', {topic: topic});
-            input.value = '';
+            chat.appendChild(currentMessageContainer);
+            currentRole = msg.role;
         }
-    </script>
+
+        // Update the current message container with the new content
+        currentMessageContent.textContent = `${msg.role}: ${msg.content}`;
+        chat.scrollTop = chat.scrollHeight;  // Scroll to the bottom
+    });
+
+    function startConversation() {
+        var input = document.getElementById('location_input');
+        var location = input.value;
+        socket.emit('start_conversation', {location});
+        input.value = '';
+    }
+</script>
 </body>
 </html>

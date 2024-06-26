@@ -107,14 +107,14 @@ def index():
 
 @socketio.on('start_conversation')
 def handle_start_conversation(data):
-    topic = data['topic']
-    socketio.emit('new_message', {'role': 'system', 'content': f"Starting conversation on topic: {topic}"})
+    location = data['location']
+    socketio.emit('new_message', {'role': 'system', 'content': f"You are taking part in the debate who is stronger, and zou are going to fight in {location}"})
 
     for agent in agents:
         agent.reset_history()
-        agent.history.append({"role": "user", "content": topic})
+        agent.history.append({"role": "user", "content": location})
 
-    threading.Thread(target=run_conversation, args=(agents, topic)).start()
+    threading.Thread(target=run_conversation, args=(agents, location)).start()
 
 def run_conversation(agents, initial_message, num_turns=15):
     message = initial_message
